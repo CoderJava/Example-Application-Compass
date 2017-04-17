@@ -42,6 +42,7 @@ public class MainActivity extends AppCompatActivity implements MainActivityView,
         onAttach();
         buildGoogleApiClient();
         Log.d(TAG, "onCreate");
+        textViewLocationNowActivityMain.setSelected(true);
     }
 
     private void initPresenter() {
