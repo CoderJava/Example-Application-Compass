@@ -10,4 +10,7 @@ public interface MainActivityView extends View {
 
     void adjustArrow(float currentAzimuth, float azimuth);
 
+    void setLocationNameSuccess(String formattedAddress);
+
+    void setLocationNameFail();
 }

@@ -78,7 +78,7 @@ public class Compass implements SensorEventListener {
 
                 /*mGravity == sensorEvent.values;*/
 
-                Log.d(TAG, Float.toString(mGravity[0]));
+                /*Log.d(TAG, Float.toString(mGravity[0]));*/
 
             }
 
@@ -88,7 +88,7 @@ public class Compass implements SensorEventListener {
                 mGeomagnetic[0] = alpha * mGeomagnetic[0] + (1 - alpha) * sensorEvent.values[0];
                 mGeomagnetic[1] = alpha * mGeomagnetic[1] + (1 - alpha) * sensorEvent.values[1];
                 mGeomagnetic[2] = alpha * mGeomagnetic[2] + (1 - alpha) * sensorEvent.values[2];
-                Log.d(TAG, Float.toString(sensorEvent.values[0]));
+                /*Log.d(TAG, Float.toString(sensorEvent.values[0]));*/
             }
 
             float r[] = new float[9];
@@ -97,10 +97,10 @@ public class Compass implements SensorEventListener {
             if (success) {
                 float orientation[] = new float[3];
                 SensorManager.getOrientation(r, orientation);
-                Log.d(TAG, "azimuth (rad): " + azimuth);
+                /*Log.d(TAG, "azimuth (rad): " + azimuth);*/
                 azimuth = (float) Math.toDegrees(orientation[0]); // orientation
                 azimuth = (azimuth + 360) % 360;
-                Log.d(TAG, "azimuth (deg): " + azimuth);
+                /*Log.d(TAG, "azimuth (deg): " + azimuth);*/
                 /*onAdjustArrow();*/
                 // mainActivityPresenter.onAdjustArrow(-currentAzimuth, -azimuth);
                 if (className.equalsIgnoreCase("MainActivity")) {
