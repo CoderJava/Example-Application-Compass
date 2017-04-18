@@ -11,6 +11,7 @@ import android.util.Log;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.gcm.GcmNetworkManager;
 import com.google.android.gms.gcm.OneoffTask;
+import com.google.android.gms.gcm.PeriodicTask;
 import com.google.android.gms.gcm.Task;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
@@ -142,14 +143,19 @@ public class MainActivityPresenter implements Presenter<MainActivityView>, Locat
 
     private void startLocationGcmTaskService(Context context) {
         gcmNetworkManager = GcmNetworkManager.getInstance(context);
-        OneoffTask oneoffTask = new OneoffTask.Builder()
+        /*OneoffTask oneoffTask = new OneoffTask.Builder()
                 .setService(LocationGcmTaskService.class)
                 .setExecutionWindow(0, 60)
                 .setTag(PERIODIC_TASK)
                 .setRequiredNetwork(Task.NETWORK_STATE_ANY)
                 .setRequiresCharging(false)
+                .build();*/
+        PeriodicTask periodicTask = new PeriodicTask.Builder()
+                .setService(LocationGcmTaskService.class)
+                .setTag(PERIODIC_TASK)
+                .setPeriod(30) // seconds
                 .build();
-        gcmNetworkManager.schedule(oneoffTask);
+        gcmNetworkManager.schedule(periodicTask);
     }
 
     private static void initRetrofit(String baseApiUrl) {
