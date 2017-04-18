@@ -13,4 +13,8 @@ public interface MainActivityView extends View {
     void setLocationNameSuccess(String formattedAddress);
 
     void setLocationNameFail();
+
+    void showDialogEnabledGps();
+
+    void gpsAlreadyEnabled();
 }

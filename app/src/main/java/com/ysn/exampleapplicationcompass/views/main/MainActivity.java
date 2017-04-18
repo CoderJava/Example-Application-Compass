@@ -1,7 +1,11 @@
 package com.ysn.exampleapplicationcompass.views.main;
 
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -13,6 +17,7 @@ import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.gcm.GcmNetworkManager;
 import com.google.android.gms.location.LocationServices;
 import com.ysn.exampleapplicationcompass.R;
 
@@ -31,7 +36,9 @@ public class MainActivity extends AppCompatActivity implements MainActivityView,
     ImageView imageViewHandsActivityMain;
     @BindView(R.id.text_view_location_now_activity_main)
     TextView textViewLocationNowActivityMain;
+
     private GoogleApiClient googleApiClient;
+    private GcmNetworkManager gcmNetworkManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,9 +47,11 @@ public class MainActivity extends AppCompatActivity implements MainActivityView,
         ButterKnife.bind(this);
         initPresenter();
         onAttach();
-        buildGoogleApiClient();
-        Log.d(TAG, "onCreate");
-        textViewLocationNowActivityMain.setSelected(true);
+        checkPermissionGps();
+    }
+
+    private void checkPermissionGps() {
+        mainActivityPresenter.onCheckPermissionGps(this);
     }
 
     private void initPresenter() {
@@ -80,6 +89,8 @@ public class MainActivity extends AppCompatActivity implements MainActivityView,
 
     @Override
     protected void onResume() {
+        Log.d(TAG, "onResume");
+        checkPermissionGps();
         onAttach();
         super.onResume();
     }
@@ -120,6 +131,7 @@ public class MainActivity extends AppCompatActivity implements MainActivityView,
     @Override
     public void setLocationNameSuccess(String formattedAddress) {
         textViewLocationNowActivityMain.setText(formattedAddress);
+        Log.d(TAG, "setLocationNameSuccess: " + formattedAddress);
     }
 
     @Override
@@ -136,5 +148,36 @@ public class MainActivity extends AppCompatActivity implements MainActivityView,
                 .build();
         googleApiClient.connect();
         Log.d(TAG, "buildGoogleApiClient");
+    }
+
+    @Override
+    public void showDialogEnabledGps() {
+        Log.d(TAG, "showDialogEnabledGps");
+        AlertDialog.Builder builder = new AlertDialog.Builder(this)
+                .setCancelable(false)
+                .setMessage("Your GPS seems to be disabled, do you want to enable it?")
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.dismiss();
+                        startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                    }
+                })
+                .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.dismiss();
+                        System.exit(1);
+                    }
+                });
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
+
+    @Override
+    public void gpsAlreadyEnabled() {
+        Log.d(TAG, "gpsAlreadyEnabled");
+        buildGoogleApiClient();
+        textViewLocationNowActivityMain.setSelected(true);
     }
 }

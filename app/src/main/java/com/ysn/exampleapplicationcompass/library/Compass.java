@@ -47,25 +47,6 @@ public class Compass implements SensorEventListener {
         sensorManager.unregisterListener(this);
     }
 
-    // call it in view
-    /*private void onAdjustArrow() {
-        if (imageViewArrowView == null) {
-            Log.d(TAG, "arrow view is not set");
-            return;
-        }
-        Log.d(TAG, "will set rotation from " + currentAzimuth + " to " + azimuth);
-
-        Animation animaton = new RotateAnimation(-currentAzimuth, -azimuth,
-                Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
-        currentAzimuth = azimuth;
-
-        animaton.setDuration(500);
-        animaton.setRepeatCount(0);
-        animaton.setFillAfter(true);
-
-        imageViewArrowView.startAnimation(animaton);
-    }*/
-
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
         final float alpha = 0.97f;
@@ -77,9 +58,7 @@ public class Compass implements SensorEventListener {
                 mGravity[2] = alpha * mGravity[2] + (1 - alpha) * sensorEvent.values[2];
 
                 /*mGravity == sensorEvent.values;*/
-
                 /*Log.d(TAG, Float.toString(mGravity[0]));*/
-
             }
 
             if (sensorEvent.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {

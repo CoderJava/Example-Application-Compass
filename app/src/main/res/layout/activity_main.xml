@@ -23,7 +23,7 @@
                 android:id="@+id/text_view_location_now_activity_main"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Simple application that shows how to use marquee, with a long text"
+                android:text="-"
                 android:textSize="20sp"
                 android:layout_centerVertical="true"
                 android:layout_toLeftOf="@+id/image_view_location_now_activity_main"
