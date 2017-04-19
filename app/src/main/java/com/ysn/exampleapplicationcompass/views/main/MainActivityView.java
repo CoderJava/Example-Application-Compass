@@ -17,4 +17,8 @@ public interface MainActivityView extends View {
     void showDialogEnabledGps();
 
     void gpsAlreadyEnabled();
+
+    void gotoMyLocationActivity();
+
+    void gotoMapsActivity();
 }

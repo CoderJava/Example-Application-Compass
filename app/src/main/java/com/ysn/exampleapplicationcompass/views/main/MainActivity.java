@@ -1,44 +1,56 @@
 package com.ysn.exampleapplicationcompass.views.main;
 
+import android.animation.Animator;
+import android.animation.ObjectAnimator;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.RotateAnimation;
+import android.view.animation.TranslateAnimation;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.gcm.GcmNetworkManager;
 import com.google.android.gms.location.LocationServices;
 import com.ysn.exampleapplicationcompass.R;
+import com.ysn.exampleapplicationcompass.views.submenu.location.MyLocationActivity;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 
 public class MainActivity extends AppCompatActivity implements MainActivityView,
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
     private final String TAG = "MainActivityTAG";
-
     private MainActivityPresenter mainActivityPresenter;
+    private GoogleApiClient googleApiClient;
+
     @BindView(R.id.image_view_dial_activity_main)
     ImageView imageViewDialActivityMain;
     @BindView(R.id.image_view_image_hands_activity_main)
     ImageView imageViewHandsActivityMain;
     @BindView(R.id.text_view_location_now_activity_main)
     TextView textViewLocationNowActivityMain;
+    @BindView(R.id.floating_action_button_menu_activity_main)
+    FloatingActionButton floatingActionButtonMenuActivityMain;
+    @BindView(R.id.floating_action_button_my_location_activity_main)
+    FloatingActionButton floatingActionButtonMyLocationActivityMain;
+    @BindView(R.id.floating_action_button_maps_activity_main)
+    FloatingActionButton floatingActionButtonMapsActivityMain;
 
-    private GoogleApiClient googleApiClient;
-    private GcmNetworkManager gcmNetworkManager;
+    private boolean menuShown = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,7 +59,6 @@ public class MainActivity extends AppCompatActivity implements MainActivityView,
         ButterKnife.bind(this);
         initPresenter();
         onAttach();
-        checkPermissionGps();
     }
 
     private void checkPermissionGps() {
@@ -84,21 +95,93 @@ public class MainActivity extends AppCompatActivity implements MainActivityView,
     @Override
     protected void onDestroy() {
         onDetach();
+        mainActivityPresenter.stopCompass();
         super.onDestroy();
     }
 
     @Override
     protected void onResume() {
         Log.d(TAG, "onResume");
-        checkPermissionGps();
-        onAttach();
         super.onResume();
+        checkPermissionGps();
     }
 
     @Override
     protected void onStop() {
         mainActivityPresenter.stopCompass();
         super.onStop();
+    }
+
+    @OnClick({
+            R.id.floating_action_button_menu_activity_main,
+            R.id.floating_action_button_my_location_activity_main,
+            R.id.floating_action_button_maps_activity_main
+    })
+    public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.floating_action_button_menu_activity_main:
+                menuShown = (menuShown) ? false : true;
+                if (menuShown) {
+                    ObjectAnimator objectAnimatorRotation = ObjectAnimator.ofFloat(floatingActionButtonMenuActivityMain, "rotation", 0, 45);
+                    objectAnimatorRotation.setDuration(100);
+                    objectAnimatorRotation.addListener(new Animator.AnimatorListener() {
+                        @Override
+                        public void onAnimationStart(Animator animator) {
+                            floatingActionButtonMyLocationActivityMain.show();
+                            floatingActionButtonMapsActivityMain.show();
+                        }
+
+                        @Override
+                        public void onAnimationEnd(Animator animator) {
+                            // nothing to do in here
+                        }
+
+                        @Override
+                        public void onAnimationCancel(Animator animator) {
+                            // nothing to do in here
+                        }
+
+                        @Override
+                        public void onAnimationRepeat(Animator animator) {
+                            // nothing to do in here
+                        }
+                    });
+                    objectAnimatorRotation.start();
+                } else {
+                    ObjectAnimator objectAnimatorRotation = ObjectAnimator.ofFloat(floatingActionButtonMenuActivityMain, "rotation", 45, 0);
+                    objectAnimatorRotation.setDuration(100);
+                    objectAnimatorRotation.addListener(new Animator.AnimatorListener() {
+                        @Override
+                        public void onAnimationStart(Animator animator) {
+                            floatingActionButtonMyLocationActivityMain.hide();
+                            floatingActionButtonMapsActivityMain.hide();
+                        }
+
+                        @Override
+                        public void onAnimationEnd(Animator animator) {
+                            // nothing to do in here
+                        }
+
+                        @Override
+                        public void onAnimationCancel(Animator animator) {
+                            // nothing to do in here
+                        }
+
+                        @Override
+                        public void onAnimationRepeat(Animator animator) {
+                            // nothing to do in here
+                        }
+                    });
+                    objectAnimatorRotation.start();
+                }
+                break;
+            case R.id.floating_action_button_my_location_activity_main:
+                mainActivityPresenter.onGotoMyLocationActivity();
+                break;
+            case R.id.floating_action_button_maps_activity_main:
+                mainActivityPresenter.onGotoMapsActivity();
+                break;
+        }
     }
 
     @Override
@@ -131,6 +214,8 @@ public class MainActivity extends AppCompatActivity implements MainActivityView,
     @Override
     public void setLocationNameSuccess(String formattedAddress) {
         textViewLocationNowActivityMain.setText(formattedAddress);
+        Toast.makeText(this, "Location is updated", Toast.LENGTH_SHORT)
+                .show();
         Log.d(TAG, "setLocationNameSuccess: " + formattedAddress);
     }
 
@@ -152,7 +237,6 @@ public class MainActivity extends AppCompatActivity implements MainActivityView,
 
     @Override
     public void showDialogEnabledGps() {
-        Log.d(TAG, "showDialogEnabledGps");
         AlertDialog.Builder builder = new AlertDialog.Builder(this)
                 .setCancelable(false)
                 .setMessage("Your GPS seems to be disabled, do you want to enable it?")
@@ -179,5 +263,17 @@ public class MainActivity extends AppCompatActivity implements MainActivityView,
         Log.d(TAG, "gpsAlreadyEnabled");
         buildGoogleApiClient();
         textViewLocationNowActivityMain.setSelected(true);
+    }
+
+    @Override
+    public void gotoMyLocationActivity() {
+        Intent intentMyLocation = new Intent(this, MyLocationActivity.class);
+        startActivity(intentMyLocation);
+        overridePendingTransition(R.anim.slide_in_from_right, R.anim.slide_out_from_right);
+    }
+
+    @Override
+    public void gotoMapsActivity() {
+        // go to MapsActivity
     }
 }

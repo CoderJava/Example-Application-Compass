@@ -10,16 +10,11 @@ import android.util.Log;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.gcm.GcmNetworkManager;
-import com.google.android.gms.gcm.OneoffTask;
-import com.google.android.gms.gcm.PeriodicTask;
-import com.google.android.gms.gcm.Task;
-import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.model.LatLng;
 import com.ysn.exampleapplicationcompass.api.GoogleMapsApiService;
 import com.ysn.exampleapplicationcompass.library.Compass;
-import com.ysn.exampleapplicationcompass.services.LocationGcmTaskService;
 import com.ysn.exampleapplicationcompass.views.base.Presenter;
 
 import org.json.JSONArray;
@@ -39,14 +34,13 @@ import retrofit2.converter.gson.GsonConverterFactory;
  * Created by root on 17/04/17.
  */
 
-public class MainActivityPresenter implements Presenter<MainActivityView>, LocationListener {
+public class MainActivityPresenter implements Presenter<MainActivityView> {
+    
     private static final String TAG = "MainActivityPresenter";
-    public static final String PERIODIC_TASK = "PERIODIC_TASK";
     private static MainActivityView mainActivityView;
     private Compass compass;
     private Location lastLocation;
     private static Retrofit retrofit;
-    private GcmNetworkManager gcmNetworkManager;
 
     @Override
     public void onAttach(MainActivityView view) {
@@ -84,17 +78,10 @@ public class MainActivityPresenter implements Presenter<MainActivityView>, Locat
         locationRequest.setFastestInterval(1 * 1000);
         locationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
 
-        // permission for marshmellow
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED && googleApiClient.isConnected()) {
-            LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, locationRequest, this);
+            lastLocation = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
+            Log.d(TAG, "permission for marshmellow");
         }
-        lastLocation = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
-        LocationGcmTaskService.locationRequest = locationRequest;
-        LocationGcmTaskService.googleApiClient = googleApiClient;
-        LocationGcmTaskService.context = context;
-
-        // start service location gcm task
-        startLocationGcmTaskService(context);
 
         if (lastLocation == null) {
             lastLocation = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
@@ -105,7 +92,6 @@ public class MainActivityPresenter implements Presenter<MainActivityView>, Locat
             initRetrofit(GoogleMapsApiService.baseApiUrl);
             GoogleMapsApiService googleMapsApiService = retrofit.create(GoogleMapsApiService.class);
             String strLatlngLocationNow = latLnglastLocation.latitude + ", " + latLnglastLocation.longitude;
-            Log.d(TAG, "strLatlngLocationNow: " + strLatlngLocationNow);
             Call<ResponseBody> resultCallGetLocationNameNow = googleMapsApiService.getLocationNameNow(strLatlngLocationNow, GoogleMapsApiService.apiKey);
             resultCallGetLocationNameNow.enqueue(new Callback<ResponseBody>() {
                 @Override
@@ -141,33 +127,11 @@ public class MainActivityPresenter implements Presenter<MainActivityView>, Locat
         }
     }
 
-    private void startLocationGcmTaskService(Context context) {
-        gcmNetworkManager = GcmNetworkManager.getInstance(context);
-        /*OneoffTask oneoffTask = new OneoffTask.Builder()
-                .setService(LocationGcmTaskService.class)
-                .setExecutionWindow(0, 60)
-                .setTag(PERIODIC_TASK)
-                .setRequiredNetwork(Task.NETWORK_STATE_ANY)
-                .setRequiresCharging(false)
-                .build();*/
-        PeriodicTask periodicTask = new PeriodicTask.Builder()
-                .setService(LocationGcmTaskService.class)
-                .setTag(PERIODIC_TASK)
-                .setPeriod(30) // seconds
-                .build();
-        gcmNetworkManager.schedule(periodicTask);
-    }
-
     private static void initRetrofit(String baseApiUrl) {
         retrofit = new Retrofit.Builder()
                 .baseUrl(baseApiUrl)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
-    }
-
-    @Override
-    public void onLocationChanged(Location location) {
-
     }
 
     public void onCheckPermissionGps(Context context) {
@@ -181,40 +145,11 @@ public class MainActivityPresenter implements Presenter<MainActivityView>, Locat
         }
     }
 
-    public static void getLocationNameNow(LatLng latLngLastLocation) {
-        initRetrofit(GoogleMapsApiService.baseApiUrl);
-        GoogleMapsApiService googleMapsApiService = retrofit.create(GoogleMapsApiService.class);
-        String strLatlngLastLocation = latLngLastLocation.latitude + ", " + latLngLastLocation.longitude;
-        Call<ResponseBody> resultCallGetLocationNameNow = googleMapsApiService.getLocationNameNow(strLatlngLastLocation, GoogleMapsApiService.apiKey);
-        resultCallGetLocationNameNow.enqueue(new Callback<ResponseBody>() {
-            @Override
-            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                try {
-                    JSONObject jsonObjectResponse = new JSONObject(response.body().string());
-                    if (jsonObjectResponse.getString("status").equalsIgnoreCase("OK")) {
-                        // response success
-                        JSONArray jsonArrayResults = jsonObjectResponse.getJSONArray("results");
-                        JSONObject jsonObjectItemResult = jsonArrayResults.getJSONObject(0);
-                        String formattedAddress = jsonObjectItemResult.getString("formatted_address");
-                        mainActivityView.setLocationNameSuccess(formattedAddress);
-                    } else {
-                        // response success but no data
-                        mainActivityView.setLocationNameFail();
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                    mainActivityView.setLocationNameFail();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    mainActivityView.setLocationNameFail();
-                }
-            }
+    public void onGotoMyLocationActivity() {
+        mainActivityView.gotoMyLocationActivity();
+    }
 
-            @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
-                t.printStackTrace();
-                mainActivityView.setLocationNameFail();
-            }
-        });
+    public void onGotoMapsActivity() {
+        mainActivityView.gotoMapsActivity();
     }
 }

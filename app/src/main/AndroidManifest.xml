@@ -22,15 +22,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <service android:name=".services.LocationGcmTaskService"
-            android:exported="true"
-            android:enabled="true"
-            >
-            <intent-filter>
-                <action android:name="com.google.android.gms.gcm.ACTION_TASK_READY" />
-            </intent-filter>
-        </service>
+        <activity android:name=".views.submenu.location.MyLocationActivity"></activity>
     </application>
 
 </manifest>
