@@ -1,11 +1,14 @@
 package com.ysn.exampleapplicationcompass.api;
 
-import com.ysn.exampleapplicationcompass.internal.model.geocode.Geocode;
+import com.google.gson.JsonObject;
+
+import org.json.JSONObject;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Query;
+import rx.Observable;
 
 /**
  * Created by root on 17/04/17.
@@ -19,6 +22,38 @@ public interface GoogleMapsApiService {
     @GET("maps/api/geocode/json")
     Call<ResponseBody> getLocationNameNow(
             @Query("latlng") String latlng,
+            @Query("key") String key
+    );
+
+    /*https://maps.googleapis.com/maps/api/directions/json?origin=...&destination=...&key=...*/
+    /*@GET("maps/api/directions/json")
+    Call<ResponseBody> getDirection(
+            @Query("origin") String origin,
+            @Query("destination") String destination,
+            @Query("key") String key
+    );*/
+
+    /*https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=3.5763926,98.6824935&destinations=3.581256655683292,98.68268173187971&key=AIzaSyCWel6yfkJ_PMYql_REc60Aikc6beLIYAA*/
+    /*@GET("maps/api/distancematrix/json")
+    Call<ResponseBody> getDistanceMatrix(
+            @Query("units") String units,
+            @Query("origins") String origin,
+            @Query("destination") String destination,
+            @Query("key") String key
+    );*/
+
+    @GET("maps/api/directions/json")
+    Observable<JsonObject> getDirection(
+            @Query("origin") String origin,
+            @Query("destination") String destination,
+            @Query("key") String key
+    );
+
+    @GET("maps/api/distancematrix/json")
+    Observable<JsonObject> getDistanceMatrix(
+            @Query("units") String units,
+            @Query("origins") String origin,
+            @Query("destinations") String destination,
             @Query("key") String key
     );
 

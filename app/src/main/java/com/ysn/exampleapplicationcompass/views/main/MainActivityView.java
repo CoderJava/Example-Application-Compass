@@ -1,5 +1,8 @@
 package com.ysn.exampleapplicationcompass.views.main;
 
+import android.location.Location;
+
+import com.google.android.gms.maps.model.LatLng;
 import com.ysn.exampleapplicationcompass.views.base.View;
 
 /**
@@ -10,7 +13,7 @@ public interface MainActivityView extends View {
 
     void adjustArrow(float currentAzimuth, float azimuth);
 
-    void setLocationNameSuccess(String formattedAddress);
+    void setLocationNameSuccess(String formattedAddress, LatLng latLnglastLocation);
 
     void setLocationNameFail();
 
@@ -21,4 +24,6 @@ public interface MainActivityView extends View {
     void gotoMyLocationActivity();
 
     void gotoMapsActivity();
+
+    void refreshLocation(Location locationRefresh);
 }

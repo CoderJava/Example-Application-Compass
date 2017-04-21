@@ -4,6 +4,7 @@ import android.animation.Animator;
 import android.animation.ObjectAnimator;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.location.Location;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -15,7 +16,6 @@ import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.RotateAnimation;
-import android.view.animation.TranslateAnimation;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -23,8 +23,11 @@ import android.widget.Toast;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.model.LatLng;
 import com.ysn.exampleapplicationcompass.R;
 import com.ysn.exampleapplicationcompass.views.submenu.location.MyLocationActivity;
+
+import org.greenrobot.eventbus.EventBus;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -51,6 +54,7 @@ public class MainActivity extends AppCompatActivity implements MainActivityView,
     FloatingActionButton floatingActionButtonMapsActivityMain;
 
     private boolean menuShown = false;
+    private LatLng latLngLastLocation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,10 +63,6 @@ public class MainActivity extends AppCompatActivity implements MainActivityView,
         ButterKnife.bind(this);
         initPresenter();
         onAttach();
-    }
-
-    private void checkPermissionGps() {
-        mainActivityPresenter.onCheckPermissionGps(this);
     }
 
     private void initPresenter() {
@@ -90,12 +90,14 @@ public class MainActivity extends AppCompatActivity implements MainActivityView,
     protected void onPause() {
         super.onPause();
         mainActivityPresenter.stopCompass();
+        mainActivityPresenter.stopGpsService();
     }
 
     @Override
     protected void onDestroy() {
         onDetach();
         mainActivityPresenter.stopCompass();
+        mainActivityPresenter.stopGpsService();
         super.onDestroy();
     }
 
@@ -103,12 +105,13 @@ public class MainActivity extends AppCompatActivity implements MainActivityView,
     protected void onResume() {
         Log.d(TAG, "onResume");
         super.onResume();
-        checkPermissionGps();
+        mainActivityPresenter.startGpsService(this);
     }
 
     @Override
     protected void onStop() {
         mainActivityPresenter.stopCompass();
+        mainActivityPresenter.stopGpsService();
         super.onStop();
     }
 
@@ -198,7 +201,7 @@ public class MainActivity extends AppCompatActivity implements MainActivityView,
     @Override
     public void onConnected(@Nullable Bundle bundle) {
         Log.d(TAG, "onConnected");
-        mainActivityPresenter.onConnected(this, googleApiClient);
+        mainActivityPresenter.onConnected(this, null);
     }
 
     @Override
@@ -212,8 +215,10 @@ public class MainActivity extends AppCompatActivity implements MainActivityView,
     }
 
     @Override
-    public void setLocationNameSuccess(String formattedAddress) {
+    public void setLocationNameSuccess(String formattedAddress, LatLng latLnglastLocation) {
+        this.latLngLastLocation = latLnglastLocation;
         textViewLocationNowActivityMain.setText(formattedAddress);
+        textViewLocationNowActivityMain.setSelected(true);
         Toast.makeText(this, "Location is updated", Toast.LENGTH_SHORT)
                 .show();
         Log.d(TAG, "setLocationNameSuccess: " + formattedAddress);
@@ -221,7 +226,7 @@ public class MainActivity extends AppCompatActivity implements MainActivityView,
 
     @Override
     public void setLocationNameFail() {
-        Toast.makeText(this, "get location name failed", Toast.LENGTH_LONG)
+        Toast.makeText(this, "get data location failed", Toast.LENGTH_LONG)
                 .show();
     }
 
@@ -267,6 +272,9 @@ public class MainActivity extends AppCompatActivity implements MainActivityView,
 
     @Override
     public void gotoMyLocationActivity() {
+        if (latLngLastLocation != null) {
+            EventBus.getDefault().postSticky(latLngLastLocation);
+        }
         Intent intentMyLocation = new Intent(this, MyLocationActivity.class);
         startActivity(intentMyLocation);
         overridePendingTransition(R.anim.slide_in_from_right, R.anim.slide_out_from_right);
@@ -275,5 +283,10 @@ public class MainActivity extends AppCompatActivity implements MainActivityView,
     @Override
     public void gotoMapsActivity() {
         // go to MapsActivity
+    }
+
+    @Override
+    public void refreshLocation(Location locationRefresh) {
+        mainActivityPresenter.onConnected(this, locationRefresh);
     }
 }

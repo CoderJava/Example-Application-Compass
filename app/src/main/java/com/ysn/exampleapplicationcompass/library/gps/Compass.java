@@ -1,4 +1,4 @@
-package com.ysn.exampleapplicationcompass.library;
+package com.ysn.exampleapplicationcompass.library.gps;
 
 import android.content.Context;
 import android.hardware.Sensor;
